@@ -51,6 +51,26 @@
       "description": "Optional simplified elevations (feet or meters depending on code)",
       "items": { "type": "number" }
     }
+    ,
+    "PowerZoneBuckets": {
+      "type": "array",
+      "description": "Counts per power zone",
+      "items": { "type": "integer" }
+    },
+    "PowerZones": {
+      "type": "array",
+      "description": "Power zones computed from FTP",
+      "items": {
+        "type": "object",
+        "properties": {
+          "zone": { "type": "integer" },
+          "title": { "type": "string" },
+          "powerLow": { "type": ["integer","null"] },
+          "powerHigh": { "type": ["integer","null"] }
+        },
+        "required": ["zone","title"]
+      }
+    }
   },
   "required": [
     "HeartAnalysis",
