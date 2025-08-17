@@ -30,7 +30,6 @@ func TestProcessActivityRecords(t *testing.T) {
 
 	// Create mock options for testing
 	opts := ProcessActivityOptions{
-		Svc:         nil, // Provide mock DynamoDB API implementation or nil for this test
 		Activity:    activityFile,
 		PostId:      nil,
 		Bucket:      "test-bucket",
