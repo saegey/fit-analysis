@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "processFitFile Output",
+  "description": "JSON schema for the CLI output produced by processFitFile",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "HeartAnalysis": {
+      "type": "object",
+      "description": "Map of time-bucket -> value",
+      "additionalProperties": { "type": "integer" }
+    },
+    "PowerAnalysis": {
+      "type": "object",
+      "description": "Map of time-bucket -> value",
+      "additionalProperties": { "type": "integer" }
+    },
+    "ElevationGain": {
+      "type": "number",
+      "description": "Total elevation gain (units follow existing code)"
+    },
+    "StoppedTime": {
+      "type": "integer",
+      "description": "Stopped time in seconds"
+    },
+    "ElapsedTime": {
+      "type": "integer",
+      "description": "Elapsed time in seconds"
+    },
+    "NormalizedPower": {
+      "type": "number",
+      "description": "Normalized power value"
+    },
+    "SimplifiedCoordinates": {
+      "type": "array",
+      "description": "Optional simplified coordinates as [lon, lat, elevation]",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": { "type": "number" }
+      }
+    },
+    "SimplifiedDistances": {
+      "type": "array",
+      "description": "Optional simplified distances (meters)",
+      "items": { "type": "number" }
+    },
+    "SimplifiedElevations": {
+      "type": "array",
+      "description": "Optional simplified elevations (feet or meters depending on code)",
+      "items": { "type": "number" }
+    }
+  },
+  "required": [
+    "HeartAnalysis",
+    "PowerAnalysis",
+    "ElevationGain",
+    "StoppedTime",
+    "ElapsedTime",
+    "NormalizedPower"
+  ]
+}

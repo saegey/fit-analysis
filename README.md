@@ -13,6 +13,10 @@ The CLI prints the following JSON fields:
 - `ElapsedTime` (seconds)
 - `NormalizedPower` (float)
 - `PowerAnalysis` (map / zone buckets)
+The CLI may also include these additional fields when available:
+- `SimplifiedCoordinates` (array of [lon, lat, elevation] points)
+- `SimplifiedDistances` (array of distances aligned with simplified coordinates)
+- `SimplifiedElevations` (array of elevations aligned with simplified coordinates)
 
 ## Prerequisites
 
@@ -55,6 +59,14 @@ The program prints a single JSON object to stdout. Example (trimmed):
 }
 ```
 
+If the CLI includes the optional simplified timeseries, the output can also contain:
+
+```json
+"SimplifiedCoordinates": [[-122.4, 45.5, 123.4], [-122.401, 45.501, 124.3], ...],
+"SimplifiedDistances": [0, 12.3, 24.6, ...],
+"SimplifiedElevations": [123.4, 124.3, 125.0, ...]
+```
+
 ## How it works (brief)
 
 - `main.go` is the CLI entry. It reads the `.fit` file, calls `ProcessActivityRecords`, and prints the requested JSON fields.
@@ -67,5 +79,44 @@ The program prints a single JSON object to stdout. Example (trimmed):
 - Units: Elevation/Distance conversions follow the original code. If you want different units, we can change conversions in `process.go`.
 - Output file: I can add a `--out <file>` flag to write the JSON to disk.
 - Tests: Add small unit tests for `ProcessActivityRecords` to guard behavior on small fixture files.
+
+## JSON Schema (validation)
+
+You can validate the CLI output against the included JSON Schema. A schema is available at `src/output.schema.json` and matches the fields printed by the CLI (including the optional simplified arrays).
+
+Example validation with `ajv` (recommended):
+
+```sh
+# install ajv-cli if you don't have it
+npm install -g ajv-cli
+
+# validate output.json against schema
+ajv validate -s output.schema.json -d output.json --strict=false
+```
+
+The schema is also embedded below for quick reference.
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "HeartAnalysis": { "type": "object", "additionalProperties": { "type": "integer" } },
+    "PowerAnalysis": { "type": "object", "additionalProperties": { "type": "integer" } },
+    "ElevationGain": { "type": "number" },
+    "StoppedTime": { "type": "integer" },
+    "ElapsedTime": { "type": "integer" },
+    "NormalizedPower": { "type": "number" },
+    "SimplifiedCoordinates": {
+      "type": "array",
+      "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+    },
+    "SimplifiedDistances": { "type": "array", "items": { "type": "number" } },
+    "SimplifiedElevations": { "type": "array", "items": { "type": "number" } }
+  },
+  "required": ["HeartAnalysis","PowerAnalysis","ElevationGain","StoppedTime","ElapsedTime","NormalizedPower"]
+}
+```
 
 If you want any changes to the JSON shape or extra CLI flags, tell me which fields or flags and I will add them.
