@@ -12,12 +12,15 @@ import (
 
 // Output is the JSON struct we print to stdout containing only the requested fields.
 type Output struct {
-	HeartAnalysis   dynamo.HeartAnalysis `json:"HeartAnalysis"`
-	ElevationGain   float32              `json:"ElevationGain"`
-	StoppedTime     int                  `json:"StoppedTime"`
-	ElapsedTime     int                  `json:"ElapsedTime"`
-	NormalizedPower float32              `json:"NormalizedPower"`
-	PowerAnalysis   dynamo.PowerAnalysis `json:"PowerAnalysis"`
+	HeartAnalysis         dynamo.HeartAnalysis `json:"HeartAnalysis"`
+	ElevationGain         float32              `json:"ElevationGain"`
+	StoppedTime           int                  `json:"StoppedTime"`
+	ElapsedTime           int                  `json:"ElapsedTime"`
+	NormalizedPower       float32              `json:"NormalizedPower"`
+	PowerAnalysis         dynamo.PowerAnalysis `json:"PowerAnalysis"`
+	SimplifiedCoordinates [][]float64          `json:"SimplifiedCoordinates"`
+	SimplifiedDistances   []float32            `json:"SimplifiedDistances"`
+	SimplifiedElevations  []float64            `json:"SimplifiedElevations"`
 }
 
 func main() {
@@ -48,7 +51,6 @@ func main() {
 	}
 
 	opts := ProcessActivityOptions{
-		Svc:      nil,
 		Activity: activity,
 	}
 
@@ -59,12 +61,15 @@ func main() {
 	}
 
 	out := Output{
-		HeartAnalysis:   processedData.HeartResults,
-		ElevationGain:   processedData.TotalElevationGain,
-		StoppedTime:     processedData.StoppedTime,
-		ElapsedTime:     processedData.ElapsedTime,
-		NormalizedPower: processedData.NormalizedPower,
-		PowerAnalysis:   processedData.PowerResults,
+		HeartAnalysis:         processedData.HeartResults,
+		ElevationGain:         processedData.TotalElevationGain,
+		StoppedTime:           processedData.StoppedTime,
+		ElapsedTime:           processedData.ElapsedTime,
+		NormalizedPower:       processedData.NormalizedPower,
+		PowerAnalysis:         processedData.PowerResults,
+		SimplifiedCoordinates: processedData.SimplifiedCoordinates,
+		SimplifiedDistances:   processedData.SimplifiedDistances,
+		SimplifiedElevations:  processedData.SimplifiedElevations,
 	}
 
 	b, err := json.MarshalIndent(out, "", "  ")

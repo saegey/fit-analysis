@@ -33,7 +33,6 @@ func convertToInt8Slice(slice []int8) []uint8 {
 }
 
 type ProcessActivityOptions struct {
-	Svc         dynamo.DynamoDBAPI
 	Activity    *fit.ActivityFile
 	PostId      *string
 	Bucket      string
@@ -43,6 +42,8 @@ type ProcessActivityOptions struct {
 
 type ProcessedActivityData struct {
 	SimplifiedCoordinates [][]float64
+	SimplifiedDistances   []float32
+	SimplifiedElevations  []float64
 	MergedData            []S3helper.MergedDataItem
 	S3Key                 string
 	TempResults           dynamo.TempAnalysis
@@ -247,6 +248,8 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 	// Return the processed data
 	return &ProcessedActivityData{
 		SimplifiedCoordinates: simplifiedCoordinates,
+		SimplifiedDistances:   simplifiedDistances,
+		SimplifiedElevations:  simplifiedElevations,
 		MergedData:            mergedData,
 		S3Key:                 s3key,
 		TempResults:           tempResults,

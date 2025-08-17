@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"lambda/myevent"
-	"log"
-	"net/url"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -85,30 +82,4 @@ type MetaData struct {
 	Bucket     string
 	PostId     string
 	IdentityId string
-}
-
-func ExtractMetaData(record myevent.Record, svc *s3.S3) (MetaData, error) {
-	sanitizedKey, err := url.QueryUnescape(record.S3.Object.Key)
-	if err != nil {
-		return MetaData{}, fmt.Errorf("error unescaping string: %v", err)
-	}
-
-	var bucket = record.S3.Bucket.Name
-	log.Printf("Processing S3 object from bucket %s with key %s", bucket, sanitizedKey)
-
-	// Get the metadata of the S3 object
-	metaData, err := myevent.GetObjectMetadata(svc, bucket, sanitizedKey)
-	if err != nil {
-		return MetaData{}, fmt.Errorf("failed to get metadata: %v", err)
-	}
-	var postId = metaData.Metadata["Postid"]
-	if postId == nil {
-		return MetaData{}, fmt.Errorf("missing post id: %v", err)
-	}
-
-	var identityId = metaData.Metadata["Identityid"]
-	if identityId == nil {
-		return MetaData{}, fmt.Errorf("missing identity id: %v", err)
-	}
-	return MetaData{Bucket: bucket, PostId: *postId, IdentityId: *identityId, Key: sanitizedKey}, nil
 }
