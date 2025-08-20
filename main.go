@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lambda/S3helper"
 	"lambda/dynamo"
 	"lambda/fitHelper"
 	"math"
@@ -13,17 +14,18 @@ import (
 
 // Output is the JSON struct we print to stdout containing only the requested fields.
 type Output struct {
-	HeartAnalysis         dynamo.HeartAnalysis `json:"HeartAnalysis"`
-	ElevationGain         float32              `json:"ElevationGain"`
-	StoppedTime           int                  `json:"StoppedTime"`
-	ElapsedTime           int                  `json:"ElapsedTime"`
-	NormalizedPower       float32              `json:"NormalizedPower"`
-	PowerAnalysis         dynamo.PowerAnalysis `json:"PowerAnalysis"`
-	SimplifiedCoordinates [][]float64          `json:"SimplifiedCoordinates"`
-	SimplifiedDistances   []float32            `json:"SimplifiedDistances"`
-	SimplifiedElevations  []float64            `json:"SimplifiedElevations"`
-	PowerZoneBuckets      []int                `json:"PowerZoneBuckets,omitempty"`
-	PowerZones            []PowerZone          `json:"PowerZones,omitempty"`
+	HeartAnalysis         dynamo.HeartAnalysis      `json:"HeartAnalysis"`
+	ElevationGain         float32                   `json:"ElevationGain"`
+	StoppedTime           int                       `json:"StoppedTime"`
+	ElapsedTime           int                       `json:"ElapsedTime"`
+	NormalizedPower       float32                   `json:"NormalizedPower"`
+	PowerAnalysis         dynamo.PowerAnalysis      `json:"PowerAnalysis"`
+	SimplifiedCoordinates [][]float64               `json:"SimplifiedCoordinates"`
+	SimplifiedDistances   []float32                 `json:"SimplifiedDistances"`
+	SimplifiedElevations  []float64                 `json:"SimplifiedElevations"`
+	PowerZoneBuckets      []int                     `json:"PowerZoneBuckets,omitempty"`
+	PowerZones            []PowerZone               `json:"PowerZones,omitempty"`
+	MergedData            []S3helper.MergedDataItem `json:"MergedData,omitempty"`
 }
 
 // PowerZone is the computed zone boundaries based on FTP
@@ -82,6 +84,7 @@ func main() {
 		SimplifiedCoordinates: processedData.SimplifiedCoordinates,
 		SimplifiedDistances:   processedData.SimplifiedDistances,
 		SimplifiedElevations:  processedData.SimplifiedElevations,
+		MergedData:            processedData.MergedData,
 	}
 
 	// If FTP provided, calculate power zones and buckets

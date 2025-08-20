@@ -44,6 +44,51 @@ go run . --fit fixtures/Morning_Ride-8.fit
 ./processFitFile --fit fixtures/Morning_Ride-8.fit
 ```
 
+## Testing
+
+Run all tests across the module (root and subpackages):
+
+```sh
+go test ./...
+```
+
+Verbose output:
+
+```sh
+go test -v ./...
+```
+
+Run a single test (by name pattern):
+
+```sh
+go test -run TestName ./...
+```
+
+Run tests in a specific package (from repo root):
+
+```sh
+go test -v .            # root package
+go test -v ./fitHelper  # example subpackage
+```
+
+With race detector:
+
+```sh
+go test -race ./...
+```
+
+Coverage summary and HTML report:
+
+```sh
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+go tool cover -html=coverage.out
+```
+
+Notes:
+- Ensure Go is installed and your working directory is the repository root.
+- Some tests may read from `fixtures/` or `testdata/`; paths are relative to the package under test.
+
 ## Example output
 
 The program prints a single JSON object to stdout. Example (trimmed):
