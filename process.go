@@ -151,24 +151,33 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 			}
 			count++
 
-			// Calculate elevation gain
-			if record.Altitude != 0 && record.Altitude != 65535 {
-				altitude := record.EnhancedAltitude
-				var decodedAltitude = fitHelper.DecodeAltitude(altitude)
-
-				elevation, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float32(decodedAltitude)*3.28084), 32)
-				elevations = append(elevations, elevation)
-
-				if !first {
-					if decodedAltitude > previousAltitude {
-						totalElevationGain += (decodedAltitude - previousAltitude)
-					}
-				} else {
-					first = false
-				}
-
-				previousAltitude = decodedAltitude
+			// Calculate elevation gain using EnhancedAltitude if available, else Altitude
+			var rawAltitude32 uint32
+			var decodedAltitude float32
+			if record.EnhancedAltitude != 0 && record.EnhancedAltitude != 65535 {
+				rawAltitude32 = record.EnhancedAltitude
+				decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+			} else if record.Altitude != 0 && record.Altitude != 65535 {
+				rawAltitude32 = uint32(record.Altitude)
+				decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+			} else {
+				// No valid altitude data
+				continue
 			}
+
+			elevation, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float32(decodedAltitude)*3.28084), 32)
+			elevations = append(elevations, elevation)
+
+			if !first {
+				if decodedAltitude > previousAltitude {
+					gain := decodedAltitude - previousAltitude
+					totalElevationGain += gain
+				}
+			} else {
+				first = false
+			}
+
+			previousAltitude = decodedAltitude
 		}
 	}
 
@@ -233,16 +242,10 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 			}
 		}
 
-		// Compute time (seconds since start) for this simplified index
-		var t float64
-		idx := indices[i]
-		if idx >= 0 && idx < len(activity.Records) {
-			t = activity.Records[idx].Timestamp.Sub(activity.Records[0].Timestamp).Seconds()
-		}
 		mergedData[i] = S3helper.MergedDataItem{
 			Power:     simplifiedPowers[i],
 			Distance:  float64(simplifiedDistances[i]),
-			Time:      t,
+			Time:      float64(indices[i]),
 			Elevation: float32(simplifiedElevations[i]),
 			HeartRate: simplifiedHearts[i],
 			Grade:     grade,
