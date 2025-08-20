@@ -242,10 +242,16 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 			}
 		}
 
+		var t float64
+		idx := indices[i]
+		if idx >= 0 && idx < len(activity.Records) {
+			t = activity.Records[idx].Timestamp.Sub(activity.Records[0].Timestamp).Seconds()
+		}
+
 		mergedData[i] = S3helper.MergedDataItem{
 			Power:     simplifiedPowers[i],
 			Distance:  float64(simplifiedDistances[i]),
-			Time:      float64(indices[i]),
+			Time:      t,
 			Elevation: float32(simplifiedElevations[i]),
 			HeartRate: simplifiedHearts[i],
 			Grade:     grade,
