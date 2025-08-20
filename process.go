@@ -59,6 +59,7 @@ type ProcessedActivityData struct {
 }
 
 func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData, error) {
+	// Detect manufacturer (Wahoo = 89)
 	// Variables for calculations and data storage
 	var totalPower int
 	var count int
@@ -81,6 +82,19 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 	first := true
 	var stoppedTime time.Duration
 	var activity = opts.Activity
+
+	// Determine device manufacturer from DeviceInfos (Wahoo Fitness = 89)
+	isWahoo := false
+	if activity != nil {
+		for _, di := range activity.DeviceInfos {
+			if di != nil {
+				if uint16(di.Manufacturer) == 89 { // Wahoo Fitness per FIT profile
+					isWahoo = true
+					break
+				}
+			}
+		}
+	}
 
 	// Loop through each record in the activity file
 	for i, record := range opts.Activity.Records {
@@ -151,18 +165,31 @@ func ProcessActivityRecords(opts ProcessActivityOptions) (*ProcessedActivityData
 			}
 			count++
 
-			// Calculate elevation gain using EnhancedAltitude if available, else Altitude
+			// Calculate elevation gain: Wahoo -> EnhancedAltitude, Others -> Altitude
 			var rawAltitude32 uint32
 			var decodedAltitude float32
-			if record.EnhancedAltitude != 0 && record.EnhancedAltitude != 65535 {
-				rawAltitude32 = record.EnhancedAltitude
-				decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
-			} else if record.Altitude != 0 && record.Altitude != 65535 {
-				rawAltitude32 = uint32(record.Altitude)
-				decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+			if isWahoo {
+				// Prefer Altitude for Wahoo; fallback to EnhancedAltitude
+				if record.Altitude != 65535 && record.Altitude != 0 {
+					rawAltitude32 = uint32(record.Altitude)
+					decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+				} else if record.EnhancedAltitude != 4294967295 && record.EnhancedAltitude != 0 { // fallback
+					rawAltitude32 = record.EnhancedAltitude
+					decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+				} else {
+					continue
+				}
 			} else {
-				// No valid altitude data
-				continue
+				// Prefer EnhancedAltitude for non-Wahoo; fallback to Altitude
+				if record.EnhancedAltitude != 4294967295 && record.EnhancedAltitude != 0 {
+					rawAltitude32 = record.EnhancedAltitude
+					decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+				} else if record.Altitude != 65535 && record.Altitude != 0 { // fallback
+					rawAltitude32 = uint32(record.Altitude)
+					decodedAltitude = fitHelper.DecodeAltitude(rawAltitude32)
+				} else {
+					continue
+				}
 			}
 
 			elevation, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", float32(decodedAltitude)*3.28084), 32)
